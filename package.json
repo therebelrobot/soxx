@@ -1,6 +1,6 @@
 {
   "name": "soxx",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The missing microlib for websocket communication in the browser",
   "main": "lib/soxx.js",
   "scripts": {
