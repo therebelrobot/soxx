@@ -1,0 +1,29 @@
+{
+  "name": "soxx",
+  "version": "0.0.1",
+  "description": "The missing microlib for websocket communication in the browser",
+  "main": "lib/soxx.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/therebelrobot/soxx.git"
+  },
+  "keywords": [
+    "websocket",
+    "socket",
+    "websockets",
+    "sockets",
+    "web",
+    "sock",
+    "soxx",
+    "socket.io"
+  ],
+  "author": "Trent Oswald <trentoswald@therebelrobot.com> (@therebelrobot)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/therebelrobot/soxx/issues"
+  },
+  "homepage": "https://github.com/therebelrobot/soxx#readme"
+}
