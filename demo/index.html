@@ -3,7 +3,7 @@
 <head>
   <script src='../lib/soxx.js'></script>
   <script>
-    var socket = window.Soxx.connect()
+    var socket = window.Soxx.connect({verbose:true})
     console.log(socket)
     socket.on('CoolEvent', function(data){
       console.log('event fired!', data)
@@ -13,6 +13,10 @@
     })
     setTimeout(function(){
       socket.emit('CoolEvent', {foo:'bar2'}, function(){
+        console.log('emit callback')
+      })
+      socket.off('CoolEvent')
+      socket.emit('CoolEvent', {foo:'should not function'}, function(){
         console.log('emit callback')
       })
     }, 5000)
