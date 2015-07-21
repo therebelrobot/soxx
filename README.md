@@ -96,6 +96,13 @@ To have more granular info about your events, set the `verbose` flag to `true` i
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep A Changelog](http://keepachangelog.com/).
 
+## [v1.1.0] | 2015-07-21
+*branch: [`release/v1.0.0`](https://github.com/therebelrobot/soxx/tree/release/v1.0.0)*
+
+| Type | Link | Description |
+| ---- | ---- | ----------- |
+| Added | [#4](https://github.com/therebelrobot/soxx/pull/4) | Added `off()` functionality |
+
 ## [v1.0.0] | 2015-07-21
 *branch: [`release/v1.0.0`](https://github.com/therebelrobot/soxx/tree/release/v1.0.0)*
 
