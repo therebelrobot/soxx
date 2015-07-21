@@ -1,0 +1,25 @@
+<html>
+
+<head>
+  <script src='../lib/soxx.js'></script>
+  <script>
+    var socket = window.Soxx.connect()
+    console.log(socket)
+    socket.on('CoolEvent', function(data){
+      console.log('event fired!', data)
+    })
+    socket.emit('CoolEvent', {foo:'bar'}, function(){
+      console.log('emit callback')
+    })
+    setTimeout(function(){
+      socket.emit('CoolEvent', {foo:'bar2'}, function(){
+        console.log('emit callback')
+      })
+    }, 5000)
+  </script>
+</head>
+<body>
+
+</body>
+
+</html>

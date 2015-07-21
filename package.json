@@ -4,6 +4,9 @@
   "description": "The missing microlib for websocket communication in the browser",
   "main": "lib/soxx.js",
   "scripts": {
+    "start": "npm run server & npm run watchify",
+    "server":"http-server -p 8888",
+    "watchify":"watchify src/soxx.src.js -v -s Soxx -o lib/soxx.js",
     "test": "mocha"
   },
   "repository": {
@@ -25,5 +28,10 @@
   "bugs": {
     "url": "https://github.com/therebelrobot/soxx/issues"
   },
-  "homepage": "https://github.com/therebelrobot/soxx#readme"
+  "homepage": "https://github.com/therebelrobot/soxx#readme",
+  "devDependencies": {
+    "browserify": "^11.0.0",
+    "http-server": "^0.8.0",
+    "watchify": "^3.3.0"
+  }
 }
