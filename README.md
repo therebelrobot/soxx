@@ -6,7 +6,7 @@ Provides connecting, disconnecting, eventing, retrying and listening. Not much e
 
 ## Scope
 
-In the interest of size and speed, the scope of this library extends to **modern broswers only**. Compatibility with older browsers that do not support websockets is not the aim or goal of this lib.
+In the interest of size and speed, the scope of this library extends to **modern browsers only**. Compatibility with older browsers that do not support websockets is not the aim or goal of this lib.
 
 ## Installation
 
