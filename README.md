@@ -103,7 +103,7 @@ websocket.connect()
 
 The message will come in as a raw string, you'll need to do parsing on it as you prefer.
 
-### Retry
+### Error Handling & Retry
 
 ```
 var opts = {
@@ -111,15 +111,18 @@ var opts = {
   retry: {
     count: 5, // number of times to retry as a whole since instantiation
     delay: 1000 // time to wait before retrying connection
-  }
+  },
   onRetry: function(){
     // do something (this is inline, don't do async here)
+  },
+  onError: function(eventt){
+    // handle error the way you like
   }
 }
 var websocket = new Soxx(opts)
 websocket.connect()
 ```
-
+If the connection is dropped or if an error is sent, it will attempt to retry if there is a `retry` sub-object present.
 
 ## Changelog
 
