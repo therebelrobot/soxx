@@ -1,184 +1,100 @@
-var Soxx
-module.exports = Soxx = {
-  connect: _connect,
+const noop = function(){}
 
-  // Internal objects
-  _options: {},
-  _userDefinedFunctions: {
-    on: {},
-    emit: {},
-    connect: false,
-    close: false
-  },
-  _returnObject: {},
-  _socket: {},
-  _isOpen: false,
-  _waitTime: 500,
+const Soxx = function Soxx (opts) {
+  // Init
+  const self = this
+  if (!(self instanceof Soxx)) {
+    return new Soxx(opts)
+  }
 
-  // Exposing internal functions for testing
-  __close: _closeConnection,
-  __emit: _emit,
-  __on: _on
-}
+  // opts check
+  self._settings = opts
+  if (self._settings.url.indexOf('http') > -1) {
+    self._settings.url = self._settings.url.replace('http', 'ws')
+  }
+  self._settings.onOpen = self._settings.onOpen || noop
+  self._settings.onClose = self._settings.onClose || noop
+  self._settings.onRetry = self._settings.onRetry || noop
+  self._settings.onMessage = self._settings.onMessage || noop
+  self._settings.onError = self._settings.onError || noop
 
-function _connect(opts, cb) {
-  opts = opts || {}
-
-  var options = {}
-  options.protocol = 'ws'
-  options.hostname = 'echo.websocket.org'
-  options.path = '/?encoding=text'
-  options.port = 80
-  options.verbose = false
-  for (i in opts) {
-    options[i] = opts[i]
+  // internals set
+  self._socket = {}
+  self._flags = {
+    closing:false,
+    retrying:false,
+    retriesLeft:0
   }
-  options.url = options.url || options.protocol + '://' + options.hostname + ':' + options.port + options.path
-  Soxx._options = options
-
-  if (Soxx._options.verbose && cb) {
-    console.log('Soxx | Setting listener on Websocket:', Soxx._options.url, 'Event: Connection open')
+  if(self._settings.retry){
+    self._flags.retriesLeft = self._settings.retry.count || 0
+    self._settings.retry.delay = self._settings.retry.delay || 1000
   }
-  Soxx._userDefinedFunctions.open = cb
-  Soxx._socket = new WebSocket(options.url)
-  Soxx._socket.onopen = options.onopen || _onOpen
-  Soxx._socket.onclose = options.onclose || _onClose
-  Soxx._socket.onmessage = options.onmessage || _onMessage
-  Soxx._socket.onerror = options.onerror || _onError
-  Soxx._returnObject = {
-    socket: Soxx._socket,
-    close: _close,
-    disconnect: _closeConnection
-  }
-  if (!options.onmessage) {
-    Soxx._returnObject.on = _on
-    Soxx._returnObject.off = _off
-    Soxx._returnObject.emit = _emit
-  }
-  return Soxx._returnObject
-}
-
-/** Exposed Functions */
-
-function _closeConnection(cb) { // Internal Function: Close connection and run callback if present
-  Soxx._userDefinedFunctions.close = cb
-  Soxx._socket.close()
-  return false
-}
-
-function _close(cb) { // Exposed Function : Soxx.open(opts).close(cb)
-  // set up custom on close cb
-  if (Soxx._options.verbose) {
-    console.log('Soxx | Setting listener on Websocket:', Soxx._options.url, 'Event: Connection close')
-  }
-  Soxx._userDefinedFunctions.close = cb
-  return Soxx._returnObject
-}
-
-function _emit(event, data, cb) { // Exposed Function : Soxx.open(opts).emit(cb)
-  // reject 'connect' and 'close' events
-  if (event === 'connect' || event === 'close') {
-    console.error('Soxx | \'connect\' and \'close\' events are reserved. Please choose another event name.')
-    return false
-  }
-  var objectToEmit = {
-    event: event,
-    data: data
-  }
-  if (Soxx._options.verbose) {
-    console.log('Soxx | Emitting to Websocket:', Soxx._options.url, objectToEmit)
-  }
-  if (Soxx._isOpen) {
-    Soxx._socket.send(JSON.stringify(objectToEmit))
-  }
-  else {
-    console.log('Soxx | Socket not yet open. Waiting', Soxx._waitTime, 'ms to try again.')
-    setTimeout(function () {
-      _emit(event, data, cb)
-    }, Soxx._waitTime)
-  }
-  return Soxx._returnObject
-}
-
-function _on(event, cb) { // Exposed Function : Soxx.open(opts).on(cb)
-  // Reserve 'connect' and 'close' events
-  if (event !== 'connect' && event !== 'close') {
-    if (Soxx._options.verbose) {
-      console.log('Soxx | Setting listener on Websocket:', Soxx._options.url, 'Event:', event)
+  self._events = {}
+  self._events.onOpen = function onOpenSoxx(e){
+    if(!self._flags.retrying){
+      self._settings.onOpen(e)
     }
-    Soxx._userDefinedFunctions.on[event] = cb
+    self._flags.retrying = false
   }
-  else { // set up custom on connect and close cbs
+  self._events.onRetry = function onRetrySoxx(e){
+    console.warn('Attempting reconnection...')
+    if(self._flags.retriesLeft){
+      self._flags.retrying = true
+      self._flags.retries--
+      self._settings.onRetry(e)
+      self._events.retryTimeout = setTimeout(function(){
+        self.connect()
+      }, self._settings.retry.delay)
+    }
+    console.warn('Retries unsuccessful. Aborting.')
+  }
+  self._events.onClose = function onCloseSoxx(e){
+    if(!self._flags.closing){
+      console.error('Soxx error:')
+      console.error('Socket closed prematurely.')
+      if(self._settings.retry){
+        return self._events.onRetry(e)
+      }
+    }
+    self._flags.closing = false
+    self._settings.onClose(e)
+  }
+  self._events.onMessage = function onMessageSoxx(e){
+    self._settings.onMessage(e)
+  }
+  self._events.onError = function onErrorSoxx(e){
+    console.error('Soxx error:')
+    console.error(e)
+    if(self._settings.retry){
+      return self._events.onRetry(e)
+    }
+  }
 
+  // Externals set
+  self.connect = function connectSoxx(){
+    self._socket = new WebSocket(self._settings.url)
+    self._socket.onopen = self._events.onOpen
+    self._socket.onclose = self._events.onClose
+    self._socket.onmessage = self._events.onMessage
+    self._socket.onerror = self._events.onError
   }
-  return Soxx._returnObject
+  self.disconnect = function disconnectSoxx(){
+    self._flags.closing = true
+    if(self._events.retryTimeout){
+      clearTimeout(self._events.retryTimeout)
+      self._events.retryTimeout = false
+    }
+    self._socket.close()
+  }
+  self.destroy = function destroySoxx(){
+    self.disconnect()
+    delete self._socket
+    self._socket = {}
+  }
+
+  // make it all usable
+  return self
+
 }
 
-function _off(event) {
-  if (Soxx._options.verbose) {
-    console.log('Soxx | Removing listener from Websocket:', Soxx._options.url, 'Event:', event)
-  }
-  if (Soxx._userDefinedFunctions.on[event]) {
-    delete Soxx._userDefinedFunctions.on[event]
-  }
-}
-/** Internal Functions */
-
-function _onOpen(evt) { // Internal Function: To run after connection is opened
-  var data = evt.data
-  Soxx._isOpen = true
-  if (Soxx._options.verbose) {
-    console.log('Soxx | Connected to Websocket:', Soxx._options.url)
-  }
-  if (Soxx._userDefinedFunctions.open && typeof Soxx._userDefinedFunctions.open === 'function') {
-    Soxx._userDefinedFunctions.open(evt)
-  }
-}
-
-function _onClose(event) { // Internal Function: To run after connection is closed
-  if (Soxx._options.verbose) {
-    console.log('Soxx | Closed connection to Websocket:', Soxx._options.url)
-  }
-  if (Soxx._userDefinedFunctions.close && typeof Soxx._userDefinedFunctions.close === 'function') {
-    Soxx._userDefinedFunctions.close()
-  }
-  Soxx = {
-    connect: _connect,
-    _options: {},
-    _userDefinedFunctions: {
-      on: {},
-      emit: {},
-      connect: false,
-      close: false
-    },
-    _returnObject: {},
-    _socket: {},
-    _isOpen: false,
-    _waitTime: 500,
-    __close: _closeConnection,
-    __emit: _emit,
-    __on: _on
-  }
-}
-
-function _onMessage(event) { // Internal Function: Parse Event ID and run the corresponding _onFunctions function
-  var message = event.data
-  if (Soxx._options.verbose) {
-    console.log('Soxx | Receiving message from Websocket', Soxx._options.url, message)
-  }
-  try {
-    message = JSON.parse(message)
-  }
-  catch (e) {
-    console.error('Soxx | Message parsing from Websocket failed.')
-    return
-  }
-  if (Soxx._userDefinedFunctions.on[message.event]) {
-    Soxx._userDefinedFunctions.on[message.event](message.data)
-  }
-}
-
-function _onError(event) { // Internal Function: To run on socket error
-  console.error('Soxx | An error occured while connecting to Websocket.', Soxx._options.url, event)
-}
-
+module.exports = Soxx
