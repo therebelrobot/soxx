@@ -1,13 +1,17 @@
 {
   "name": "soxx",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "The missing microlib for websocket communication in the browser",
   "main": "lib/soxx.js",
   "scripts": {
     "start": "npm run server & npm run watchify",
-    "server":"http-server -p 8888",
-    "watchify":"watchify src/soxx.src.js -v -s Soxx -o lib/soxx.js",
-    "test": "mocha"
+    "server": "http-server -p",
+    "watchify": "watchify lib/soxx.src.js -v -s Soxx -o dist/soxx.js -t [ babelify --presets [ es2015 ] ]",
+    "pretest": "standard --verbose | snazzy",
+    "test": "npm run test:unit",
+    "test:unit": "tap test/*.unit.js",
+    "test:e2e": "echo 'No end-to-end tests specified.'",
+    "build": "browserify lib/soxx.src.js -v -s Soxx -o dist/soxx.js -t [ babelify --presets [ es2015 ] ]"
   },
   "repository": {
     "type": "git",
@@ -30,8 +34,21 @@
   },
   "homepage": "https://github.com/therebelrobot/soxx#readme",
   "devDependencies": {
+    "babel-eslint": "^6.0.4",
+    "babel-preset-es2015": "^6.6.0",
+    "babelify": "^7.3.0",
     "browserify": "^11.0.0",
     "http-server": "^0.8.0",
+    "snazzy": "^3.0.1",
+    "standard": "^6.0.8",
+    "tap": "^5.7.1",
     "watchify": "^3.3.0"
+  },
+  "standard": {
+    "parser": "babel-eslint",
+    "ignore": [
+      "**/dist/",
+      "*.tmp.js"
+    ]
   }
 }

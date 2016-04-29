@@ -1,20 +1,22 @@
-# soxx
+# ![soxx](/soxx-title-padding.png)
 
-The missing microlib for websocket communication in the modern web browser. Provides connecting, disconnecting, eventing and listening. Not much else.
+:zap: The missing microlib for websocket communication in the modern web browser. :cake:
+
+Provides connecting, disconnecting, eventing, retrying and listening. Not much else.
 
 ## Scope
 
-In the interest of size and speed, the scope of this library extends to **modern broswers only**. Compatibility with older browsers that do not support websockets is not the aim or goal of this lib.
+In the interest of size and speed, the scope of this library extends to **modern browsers only**. Compatibility with older browsers that do not support websockets is not the aim or goal of this lib.
 
 ## Installation
 
-To install Soxx, you first need to get the lib either from the [releases page]() or via NPM:
+To install Soxx, you first need to get the lib either from the [releases page](https://github.com/therebelrobot/soxx/releases) or via NPM:
 
 ```bash
 npm install soxx
 ```
 
-Then, you can either include `lib/soxx.js` file in your html file as such:
+Then, you can either include `dist/soxx.js` file in your html file as such:
 
 ```html
 <script src='path/to/soxx.js'></script>
@@ -28,73 +30,113 @@ var Soxx = require('soxx')
 
 ## API
 
-### Instatiation via `connect()`
+### Create
 
 To start a connection, you need to instatiate the lib:
 
 ```js
 var opts = {
-  protocol:'ws',
-  hostname:'echo.websocket.org',
-  path:'/?encoding=text'
+  url:'ws://sockb.in/'
 }
-var socket = Soxx.connect(opts)
+var websocket = new Soxx(opts)
 ```
 
-Once instantiated, you can assign listeners, and fire events back to the server.
+Once instantiated, you can connect, assign listeners, and fire events back to the server.
 
-### Communication with server
+### Connect
 
-This library implements a very simple eventing system. All data passed into `emit()` is added to an object with `event` and `data` defined. After being added, it is passed through `JSON.stringify()` and sent to the server. Data recieved back from the server is expected in the same format.
-
-Example:
-
-```json
-{
-  "event": "CoolEvent",
-  "data": { "foo": "bar" }
+```js
+var opts = {
+  url:'ws://sockb.in/',
+  onOpen: function(event){
+    // do something here
+  }
 }
+var websocket = new Soxx(opts)
+websocket.connect()
 ```
 
-You can bypass these settings by setting them in the opts object during instantiation. Be aware, if you set a new `onmessage` that some functionality described below may break.
+Once the lib establishes a connection with the websocket server, it will fire `onOpen` as specified.
 
-### Listeners via `on()`
-
-To assign a listener to an event:
+### Disconnect
 
 ```js
-socket.on('CoolEvent', function(data){
-  console.log('event fired!', data)
-})
+var opts = {
+  url:'ws://sockb.in/',
+  onClose: function(event){
+    // do something here
+  }
+}
+var websocket = new Soxx(opts)
+websocket.connect()
+websocket.disconnect()
 ```
 
-*Note: only one function can be assigned per event right now. Will expand this later*
+Once when you fire disconnect, it will fire `onClose` as specified.
 
-To unassign, simply run `off()`
+### Write
 
 ```js
-socket.off('CoolEvent')
+var opts = {
+  url:'ws://sockb.in/'
+}
+var websocket = new Soxx(opts)
+websocket.connect()
+var message = 'Hello World!'
+websocket.write(message)
 ```
 
-### Fire events via `emit()`
+***Note: `message` should only be a string.***
 
-To fire events back to the server:
+### Listen
 
 ```js
-var dataToSend = {foo:'bar'}
-socket.emit('CoolEvent', dataToSend, function(){
-  console.log('emit callback')
-})
+var opts = {
+  url:'ws://sockb.in/',
+  onMessage: function(message){
+    // do something with the message
+  }
+}
+var websocket = new Soxx(opts)
+websocket.connect()
 ```
 
-### Verbose Mode
+The message will come in as a raw string, you'll need to do parsing on it as you prefer.
 
-To have more granular info about your events, set the `verbose` flag to `true` in `opts` on instantiation.
+### Error Handling & Retry
+
+```
+var opts = {
+  url:'ws://sockb.in/',
+  retry: {
+    count: 5, // number of times to retry as a whole since instantiation
+    delay: 1000 // time to wait before retrying connection
+  },
+  onRetry: function(){
+    // do something (this is inline, don't do async here)
+  },
+  onError: function(eventt){
+    // handle error the way you like
+  }
+}
+var websocket = new Soxx(opts)
+websocket.connect()
+```
+If the connection is dropped or if an error is sent, it will attempt to retry if there is a `retry` sub-object present.
 
 ## Changelog
 
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep A Changelog](http://keepachangelog.com/).
+
+
+## [v2.0.0](https://github.com/therebelrobot/soxx/releases/v2.0.0) | 2016-04-29
+*branch: [`release/v2.0.0`](https://github.com/therebelrobot/soxx/tree/release/v2.0.0)*
+
+***REWRITE***
+
+This version bump is a complete rewrite. New API, new internals, new everything. Because YOLO.
+
 
 ## [v1.1.0](https://github.com/therebelrobot/soxx/commit/67ff21410ab7d24194b6e70583ebd5a124f01d4c) | 2015-07-21
 *branch: [`release/v1.1.0`](https://github.com/therebelrobot/soxx/tree/release/v1.1.0)*
