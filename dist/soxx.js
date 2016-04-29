@@ -81,6 +81,9 @@ var Soxx = function Soxx(opts) {
     self._socket.onmessage = self._events.onMessage;
     self._socket.onerror = self._events.onError;
   };
+  self.write = function writeSoxx(msg) {
+    self._socket.send(msg);
+  };
   self.disconnect = function disconnectSoxx() {
     self._flags.closing = true;
     if (self._events.retryTimeout) {
