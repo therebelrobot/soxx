@@ -3,6 +3,9 @@
 
 var noop = function noop() {};
 
+/* Make feross/standard happy: */
+/* global WebSocket */
+
 var Soxx = function Soxx(opts) {
   // Init
   var self = this;
@@ -12,7 +15,7 @@ var Soxx = function Soxx(opts) {
 
   // opts check
   self._settings = opts;
-  if (self._settings.url.indexOf('http') > -1) {
+  if (self._settings.url.indexOf('http') === 0) {
     self._settings.url = self._settings.url.replace('http', 'ws');
   }
   self._settings.onOpen = self._settings.onOpen || noop;
