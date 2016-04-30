@@ -2,7 +2,7 @@
 
 :zap: The missing microlib for websocket communication in the modern web browser. :cake:
 
-Provides connecting, disconnecting, eventing, retrying and listening. Not much else.
+Provides connecting, disconnecting, writing, retrying and listening. Not much else.
 
 ## Scope
 
