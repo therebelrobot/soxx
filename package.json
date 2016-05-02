@@ -2,7 +2,7 @@
   "name": "soxx",
   "version": "2.0.2",
   "description": "The missing microlib for websocket communication in the browser",
-  "main": "lib/soxx.js",
+  "main": "lib/soxx.src.js",
   "scripts": {
     "start": "npm run server & npm run watchify",
     "server": "http-server -p",
